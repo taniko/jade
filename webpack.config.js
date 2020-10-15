@@ -5,8 +5,8 @@ module.exports = {
   target: 'node',
   entry: './src/index.ts',
   output: {
-    path: __dirname + '/functions',
-    filename: 'index.js',
+    path: __dirname + '/dist',
+    filename: 'function.js',
     libraryTarget: 'this',
   },
   resolve: {

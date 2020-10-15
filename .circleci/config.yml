@@ -5,18 +5,24 @@ jobs:
       - image: google/cloud-sdk:alpine
     steps:
       - checkout
-      - run: apk add nodejs yarn
+      - run: apk add nodejs yarn zip
       - run: yarn install
       - run: ./node_modules/.bin/webpack
+      - run: zip -r -j functions.zip dist
       - run:
           name: deploy
           command: |
             echo $GCP_SECRET | base64 -d > ${HOME}/secret.json
             gcloud auth activate-service-account --key-file ${HOME}/secret.json
             gcloud config set project $GCLOUD_PROJECT
-            gcloud functions deploy jade --entry-point jade --runtime nodejs12 --source ./functions --trigger-http --region asia-northeast1
+            gsutil cp functions.zip gs://jade-slack
+            gcloud functions deploy jade --entry-point jade --runtime nodejs12 --source gs://jade-slack/functions.zip --trigger-http --region asia-northeast1 --memory 128MB --allow-unauthenticated
 workflows:
   version: 2
   deploy:
     jobs:
       - deploy
+    filters:
+      branches:
+        only:
+          - main
