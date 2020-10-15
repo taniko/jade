@@ -1,0 +1,22 @@
+version: 2.1
+jobs:
+  deploy:
+    docker:
+      - image: google/cloud-sdk:alpine
+    steps:
+      - checkout
+      - run: apk add nodejs yarn
+      - run: yarn install
+      - run: ./node_modules/.bin/webpack
+      - run:
+          name: deploy
+          command: |
+            echo $GCP_SECRET | base64 -d > ${HOME}/secret.json
+            gcloud auth activate-service-account --key-file ${HOME}/secret.json
+            gcloud config set project $GCLOUD_PROJECT
+            gcloud functions deploy jade --entry-point jade --runtime nodejs12 --source ./functions --trigger-http --region asia-northeast1
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - deploy
