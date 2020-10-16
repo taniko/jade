@@ -14,10 +14,6 @@ exports.jade = async (req: Request, res: Response) => {
         await slack.chat.postMessage({text: req.method, channel: req.body.channel_id})
         res.status(403).send("error");
         return;
-    } else if (!await validation(req)) {
-        await slack.chat.postMessage({text: "failed validation", channel: req.body.channel_id})
-        res.status(403).send("error");
-        return;
     }
     await slack.chat.postMessage({text: "pass", channel: req.body.channel_id})
     const storage = new Storage();
