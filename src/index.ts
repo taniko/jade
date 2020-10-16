@@ -73,7 +73,7 @@ const validation = async (req: Request, slack:  WebClient): Promise<boolean> => 
         return false;
     } else {
         const hmac = crypto.createHmac('sha256', secret);
-        await slack.chat.postMessage({text: hash, channel: req.body.channel_id})
+        await slack.chat.postMessage({text: "hmac", channel: req.body.channel_id})
         hmac.update(`${version}:${timestamp}:${JSON.stringify(req.body)}`);
         return timingSafeCompare(hash, hmac.digest('hex'));
     }
