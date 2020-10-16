@@ -69,6 +69,7 @@ const validation = async (req: Request, slack: WebClient): Promise<boolean> => {
     }
     const signature = req.headers["x-slack-signature"] as string;
     await slack.chat.postMessage({text: signature, channel: req.body.channel_id})
+    await slack.chat.postMessage({text: process.env.SIGNING_SECRET as string, channel: req.body.channel_id})
     const [version, hash] = signature.split('=');
     const secret = await decrypt(process.env.SIGNING_SECRET as string);
     const hmac = crypto.createHmac('sha256', secret as string);
