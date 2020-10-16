@@ -7,14 +7,14 @@ import * as crypto from 'crypto';
 import qs from "qs";
 
 exports.jade = async (req: Request, res: Response) => {
-    const slack: WebClient = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
+    const slack = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
     await slack.chat.postMessage({text: "hello", channel: req.body.channel_id})
     if (req.method !== 'POST') {
         await slack.chat.postMessage({text: "method", channel: req.body.channel_id})
         await slack.chat.postMessage({text: req.method, channel: req.body.channel_id})
         res.status(403).send("error");
         return;
-    } else if (!await validation(req)) {
+    } else if (!await validation(req, slack)) {
         await slack.chat.postMessage({text: "failed validation", channel: req.body.channel_id})
         res.status(403).send("error");
         return;
@@ -58,7 +58,8 @@ const decrypt = async (enc: string) => {
     return result.plaintext?.toString().trim()
 }
 
-const validation = async (req: Request): Promise<boolean> => {
+const validation = async (req: Request, slack:  WebClient): Promise<boolean> => {
+    await slack.chat.postMessage({text: req.headers["X-Slack-Request-Timestamp"] as string, channel: req.body.channel_id})
     const timestamp = req.headers["X-Slack-Request-Timestamp"] as string;
     if (Math.floor(new Date().getTime() / 1000) - parseInt(timestamp, 10) > 60 * 5) {
         return false;
