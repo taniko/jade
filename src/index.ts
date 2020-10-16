@@ -4,7 +4,7 @@ import {KeyManagementServiceClient} from "@google-cloud/kms";
 import {WebClient} from "@slack/web-api";
 import {createReadStream} from 'fs';
 import * as crypto from 'crypto';
-import qs from "qs";
+import timingSafeCompare from 'tsscmp';
 
 exports.jade = async (req: Request, res: Response) => {
     const slack = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
@@ -66,10 +66,8 @@ const validation = async (req: Request, slack:  WebClient): Promise<boolean> => 
     }
     const signature = req.headers["x-slack-signature"] as string;
     await slack.chat.postMessage({text: signature, channel: req.body.channel_id})
-    const hmac = crypto.createHmac("sha256", await decrypt(process.env.SIGNING_SECRET as string) as string);
-    const body = qs.stringify(req.body, {format: 'RFC1738'});
-    await slack.chat.postMessage({text: body, channel: req.body.channel_id})
-    const digest = hmac.update(`v0:${timestamp}:${body}`, 'utf8').digest('hex');
-    await slack.chat.postMessage({text: digest, channel: req.body.channel_id})
-    return crypto.timingSafeEqual(Buffer.from(signature, 'utf8'), Buffer.from(`v0=${digest}`, 'utf8'));
+    const hmac = crypto.createHmac('sha256', await decrypt(process.env.SIGNING_SECRET as string) as string);
+    const [version, hash] = signature.split('=');
+    hmac.update(`${version}:${timestamp}:${JSON.stringify(req.body)}`);
+    return timingSafeCompare(hash, hmac.digest('hex'));
 }
