@@ -59,12 +59,12 @@ const decrypt = async (enc: string) => {
 }
 
 const validation = async (req: Request, slack:  WebClient): Promise<boolean> => {
-    await slack.chat.postMessage({text: req.headers["X-Slack-Request-Timestamp"] as string, channel: req.body.channel_id})
-    const timestamp = req.headers["X-Slack-Request-Timestamp"] as string;
+    await slack.chat.postMessage({text: req.headers["x-slack-request-timestamp"] as string, channel: req.body.channel_id})
+    const timestamp = req.headers["x-slack-request-timestamp"] as string;
     if (Math.floor(new Date().getTime() / 1000) - parseInt(timestamp, 10) > 60 * 5) {
         return false;
     }
-    const signature = req.headers["X-Slack-Signature"] as string;
+    const signature = req.headers["x-slack-signature"] as string;
     const hmac = crypto.createHmac("sha256", await decrypt(process.env.SIGNING_SECRET as string) as string);
     const body = qs.stringify(req.body, {format: 'RFC1738'});
     const digest = hmac.update(`v0:${timestamp}:${body}`, 'utf8').digest('hex');
