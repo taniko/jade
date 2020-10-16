@@ -10,13 +10,15 @@ exports.jade = async (req: Request, res: Response) => {
     const slack: WebClient = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
     await slack.chat.postMessage({text: req.body, channel: req.body.channel_id})
     if (req.method !== 'POST') {
+        await slack.chat.postMessage({text: req.method, channel: req.body.channel_id})
         res.status(403).send("error");
         return;
     } else if (!await validation(req)) {
-        await slack.chat.postMessage({text: "failed validation", channel: "#taniko_dev"})
+        await slack.chat.postMessage({text: "failed validation", channel: req.body.channel_id})
         res.status(403).send("error");
         return;
     }
+    await slack.chat.postMessage({text: "pass", channel: req.body.channel_id})
     const storage = new Storage();
     const bucket = storage.bucket("jade-slack");
     const [files] = await bucket.getFiles({
