@@ -28,7 +28,8 @@ jobs:
               --set-env-vars PROJECT=${GCLOUD_PROJECT} \
               --set-env-vars LOCATION=${LOCATION} \
               --set-env-vars KEY_RING=${KEY_RING} \
-              --set-env-vars KEY=${KEY}
+              --set-env-vars KEY=${KEY} \
+              --service-account ${SERVICE_ACCOUNT}
 workflows:
   version: 2
   deploy:
