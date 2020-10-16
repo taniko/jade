@@ -4,7 +4,7 @@ import {KeyManagementServiceClient} from "@google-cloud/kms";
 import {WebClient} from "@slack/web-api";
 import {createReadStream} from 'fs';
 import * as crypto from 'crypto';
-import timingSafeCompare from 'tsscmp';
+import tsscmp from 'tsscmp';
 
 exports.jade = async (req: Request, res: Response) => {
     const slack = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
@@ -58,8 +58,11 @@ const decrypt = async (enc: string) => {
     return result.plaintext?.toString().trim()
 }
 
-const validation = async (req: Request, slack:  WebClient): Promise<boolean> => {
-    await slack.chat.postMessage({text: req.headers["x-slack-request-timestamp"] as string, channel: req.body.channel_id})
+const validation = async (req: Request, slack: WebClient): Promise<boolean> => {
+    await slack.chat.postMessage({
+        text: req.headers["x-slack-request-timestamp"] as string,
+        channel: req.body.channel_id
+    })
     const timestamp = req.headers["x-slack-request-timestamp"] as string;
     if (Math.floor(new Date().getTime() / 1000) - parseInt(timestamp, 10) > 60 * 5) {
         return false;
@@ -68,13 +71,7 @@ const validation = async (req: Request, slack:  WebClient): Promise<boolean> => 
     await slack.chat.postMessage({text: signature, channel: req.body.channel_id})
     const [version, hash] = signature.split('=');
     const secret = await decrypt(process.env.SIGNING_SECRET as string);
-    if (secret === undefined) {
-        await slack.chat.postMessage({text: "undefined", channel: req.body.channel_id})
-        return false;
-    } else {
-        const hmac = crypto.createHmac('sha256', secret);
-        await slack.chat.postMessage({text: "hmac", channel: req.body.channel_id})
-        hmac.update(`${version}:${timestamp}:${JSON.stringify(req.body)}`);
-        return timingSafeCompare(hash, hmac.digest('hex'));
-    }
+    const hmac = crypto.createHmac('sha256', secret as string);
+    hmac.update(`${version}:${timestamp}:${JSON.stringify(req.body)}`);
+    return tsscmp(hash, hmac.digest('hex'));
 }
