@@ -7,12 +7,13 @@ import * as crypto from 'crypto';
 import qs from "qs";
 
 exports.jade = async (req: Request, res: Response) => {
-    console.log(JSON.stringify(req.body));
+    const slack: WebClient = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
+    await slack.chat.postMessage({text: req.body, channel: "#taniko_dev"})
     if (req.method !== 'POST') {
-        res.status(403).send();
+        res.status(403).send("error");
         return;
     } else if (!await validation(req)) {
-        res.status(403).send();
+        res.status(403).send("error");
         return;
     }
     const storage = new Storage();
@@ -28,7 +29,6 @@ exports.jade = async (req: Request, res: Response) => {
     const name = file.name.split('/').pop()
     await candidate[random(candidate.length)].download({destination: `/tmp/${name}`});
     if (name != undefined) {
-        const slack: WebClient = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
         // await slack.files.upload({channels: "", file: createReadStream(`/tmp/${name}`)});
         res.status(200).send();
     } else {
