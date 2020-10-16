@@ -29,6 +29,7 @@ jobs:
               --set-env-vars LOCATION=${LOCATION} \
               --set-env-vars KEY_RING=${KEY_RING} \
               --set-env-vars KEY=${KEY} \
+              --set-env-vars SIGNING_SECRET=${SIGNING_SECRET}
               --service-account ${SERVICE_ACCOUNT}
 workflows:
   version: 2
