@@ -8,8 +8,9 @@ import qs from "qs";
 
 exports.jade = async (req: Request, res: Response) => {
     const slack: WebClient = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
-    await slack.chat.postMessage({text: req.body, channel: req.body.channel_id})
+    await slack.chat.postMessage({text: "hello", channel: req.body.channel_id})
     if (req.method !== 'POST') {
+        await slack.chat.postMessage({text: "method", channel: req.body.channel_id})
         await slack.chat.postMessage({text: req.method, channel: req.body.channel_id})
         res.status(403).send("error");
         return;
