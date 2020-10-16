@@ -14,6 +14,10 @@ exports.jade = async (req: Request, res: Response) => {
         await slack.chat.postMessage({text: req.method, channel: req.body.channel_id})
         res.status(403).send("error");
         return;
+    } else if (!await validation(req)) {
+        await slack.chat.postMessage({text: "failed validation", channel: req.body.channel_id})
+        res.status(403).send("error");
+        return;
     }
     await slack.chat.postMessage({text: "pass", channel: req.body.channel_id})
     const storage = new Storage();
@@ -63,5 +67,5 @@ const validation = async (req: Request): Promise<boolean> => {
     const hmac = crypto.createHmac("sha256", await decrypt(process.env.SIGNING_SECRET as string) as string);
     const body = qs.stringify(req.body, {format: 'RFC1738'});
     const digest = hmac.update(`v0:${timestamp}:${body}`, 'utf8').digest('hex');
-    return signature === `v0=${digest}`;
+    return crypto.timingSafeEqual(Buffer.from(signature, 'utf8'), Buffer.from(`v0=${digest}`, 'utf8'));
 }
