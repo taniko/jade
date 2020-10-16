@@ -33,8 +33,8 @@ exports.jade = async (req: Request, res: Response) => {
     const name = file.name.split('/').pop()
     await candidate[random(candidate.length)].download({destination: `/tmp/${name}`});
     if (name != undefined) {
-        // await slack.files.upload({channels: "", file: createReadStream(`/tmp/${name}`)});
-        res.status(200).send();
+        // await slack.files.upload({channels: req.body.channel_id, file: createReadStream(`/tmp/${name}`)});
+        res.status(200).send("ok");
     } else {
         res.status(500).send('error');
     }
