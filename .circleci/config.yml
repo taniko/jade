@@ -25,7 +25,7 @@ jobs:
               --memory 128MB \
               --allow-unauthenticated \
               --set-env-vars SLACK_TOKEN=${SLACK_TOKEN} \
-              --set-env-vars PROJECT=${$GCLOUD_PROJECT} \
+              --set-env-vars PROJECT=${GCLOUD_PROJECT} \
               --set-env-vars LOCATION=${LOCATION} \
               --set-env-vars KEY_RING=${KEY_RING} \
               --set-env-vars KEY=${KEY}
