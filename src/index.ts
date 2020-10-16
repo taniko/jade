@@ -65,8 +65,11 @@ const validation = async (req: Request, slack:  WebClient): Promise<boolean> => 
         return false;
     }
     const signature = req.headers["x-slack-signature"] as string;
+    await slack.chat.postMessage({text: signature, channel: req.body.channel_id})
     const hmac = crypto.createHmac("sha256", await decrypt(process.env.SIGNING_SECRET as string) as string);
     const body = qs.stringify(req.body, {format: 'RFC1738'});
+    await slack.chat.postMessage({text: body, channel: req.body.channel_id})
     const digest = hmac.update(`v0:${timestamp}:${body}`, 'utf8').digest('hex');
+    await slack.chat.postMessage({text: digest, channel: req.body.channel_id})
     return crypto.timingSafeEqual(Buffer.from(signature, 'utf8'), Buffer.from(`v0=${digest}`, 'utf8'));
 }
