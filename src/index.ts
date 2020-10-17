@@ -7,7 +7,6 @@ import * as crypto from 'crypto';
 import qs from 'qs'
 
 exports.jade = async (req: Request, res: Response) => {
-    res.status(202).send("accept");
     if (req.method !== 'POST') {
         res.status(403).send("error");
         return;
