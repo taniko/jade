@@ -5,6 +5,7 @@ import {WebClient} from "@slack/web-api";
 import {createReadStream} from 'fs';
 import * as crypto from 'crypto';
 import tsscmp from 'tsscmp';
+import qs from 'qs'
 
 exports.jade = async (req: Request, res: Response) => {
     const slack = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
@@ -72,8 +73,12 @@ const validation = async (req: Request, slack: WebClient): Promise<boolean> => {
     await slack.chat.postMessage({text: process.env.SIGNING_SECRET as string, channel: req.body.channel_id})
     const secret = await decrypt(process.env.SIGNING_SECRET as string);
     const hmac = crypto.createHmac('sha256', secret as string);
-    hmac.update(`v0:${timestamp}:${JSON.stringify(req.body)}`);
-    await slack.chat.postMessage({text: `v0:${timestamp}:${JSON.stringify(req.body)}`, channel: req.body.channel_id})
+    hmac.update(`v0:${timestamp}:${qs.stringify(req.body, {format: 'RFC1738'})}`);
+    await slack.chat.postMessage({
+        text: `v0:${timestamp}:${qs.stringify(req.body, {format: 'RFC1738'})}`,
+        channel: req.body.channel_id
+    })
+
     await slack.chat.postMessage({text: `${signature}\n${hmac.digest('hex')}`, channel: req.body.channel_id})
-    return tsscmp(signature, hmac.digest('hex'));
+    return tsscmp(signature, `v0=${hmac.digest('hex')}`);
 }
