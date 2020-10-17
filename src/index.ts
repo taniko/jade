@@ -7,7 +7,6 @@ import * as crypto from 'crypto';
 import qs from 'qs'
 
 exports.jade = async (req: Request, res: Response) => {
-    res.status(418).send({ text: 'teapots.' })
     if (req.method !== 'POST') {
         res.status(403).send("error");
         return;
@@ -30,7 +29,6 @@ exports.jade = async (req: Request, res: Response) => {
     const slack = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
     await slack.files.upload({channels: req.body.channel_id, file: createReadStream(`/tmp/${name}`)});
     res.status(200).send("ok");
-    res.end();
 }
 
 const random = (max: number) => {
