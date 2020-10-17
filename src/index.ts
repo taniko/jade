@@ -14,7 +14,6 @@ exports.jade = async (req: Request, res: Response) => {
         res.status(403).send("error");
         return;
     }
-    res.status(200).send("ok");
     const storage = new Storage();
     const bucket = storage.bucket("jade-slack");
     const [files] = await bucket.getFiles({
@@ -29,7 +28,7 @@ exports.jade = async (req: Request, res: Response) => {
     await candidate[random(candidate.length)].download({destination: `/tmp/${name}`});
     const slack = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
     await slack.files.upload({channels: req.body.channel_id, file: createReadStream(`/tmp/${name}`)});
-    return
+    res.status(200).send("ok");
 }
 
 const random = (max: number) => {
