@@ -70,10 +70,10 @@ const validation = async (req: Request, slack: WebClient): Promise<boolean> => {
     const signature = req.headers["x-slack-signature"] as string;
     await slack.chat.postMessage({text: signature, channel: req.body.channel_id})
     await slack.chat.postMessage({text: process.env.SIGNING_SECRET as string, channel: req.body.channel_id})
-    const [version, hash] = signature.split('=');
     const secret = await decrypt(process.env.SIGNING_SECRET as string);
     const hmac = crypto.createHmac('sha256', secret as string);
-    hmac.update(`${version}:${timestamp}:${JSON.stringify(req.body)}`);
-    await slack.chat.postMessage({text: `${hash}\n${hmac.digest('hex')}`, channel: req.body.channel_id})
-    return tsscmp(hash, hmac.digest('hex'));
+    hmac.update(`v0:${timestamp}:${JSON.stringify(req.body)}`);
+    await slack.chat.postMessage({text: `v0:${timestamp}:${JSON.stringify(req.body)}`, channel: req.body.channel_id})
+    await slack.chat.postMessage({text: `${signature}\n${hmac.digest('hex')}`, channel: req.body.channel_id})
+    return tsscmp(signature, hmac.digest('hex'));
 }
