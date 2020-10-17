@@ -79,6 +79,6 @@ const validation = async (req: Request, slack: WebClient): Promise<boolean> => {
         channel: req.body.channel_id
     })
 
-    await slack.chat.postMessage({text: `${signature}\n${hmac.digest('hex')}`, channel: req.body.channel_id})
-    return tsscmp(signature, `v0=${hmac.digest('hex')}`);
+    await slack.chat.postMessage({text: `${signature}\nv0=${hmac.digest('hex')}`, channel: req.body.channel_id})
+    return signature　=== `v0=${hmac.digest('hex')}`;
 }
