@@ -15,7 +15,7 @@ exports.jade = async (req: Request, res: Response) => {
         await slack.chat.postMessage({text: req.method, channel: req.body.channel_id})
         res.status(403).send("error");
         return;
-    } else if (!await validation(req, slack)) {
+    } else if (!await validation(req)) {
         await slack.chat.postMessage({text: "failed validation", channel: req.body.channel_id})
         res.status(403).send("error");
         return;
@@ -59,26 +59,14 @@ const decrypt = async (enc: string) => {
     return result.plaintext?.toString().trim()
 }
 
-const validation = async (req: Request, slack: WebClient): Promise<boolean> => {
-    await slack.chat.postMessage({
-        text: req.headers["x-slack-request-timestamp"] as string,
-        channel: req.body.channel_id
-    })
+const validation = async (req: Request): Promise<boolean> => {
     const timestamp = req.headers["x-slack-request-timestamp"] as string;
     if (Math.floor(new Date().getTime() / 1000) - parseInt(timestamp, 10) > 60 * 5) {
         return false;
     }
     const signature = req.headers["x-slack-signature"] as string;
-    await slack.chat.postMessage({text: signature, channel: req.body.channel_id})
-    await slack.chat.postMessage({text: process.env.SIGNING_SECRET as string, channel: req.body.channel_id})
     const secret = await decrypt(process.env.SIGNING_SECRET as string);
     const hmac = crypto.createHmac('sha256', secret as string);
     hmac.update(`v0:${timestamp}:${qs.stringify(req.body, {format: 'RFC1738'})}`);
-    await slack.chat.postMessage({
-        text: `v0:${timestamp}:${qs.stringify(req.body, {format: 'RFC1738'})}`,
-        channel: req.body.channel_id
-    })
-
-    await slack.chat.postMessage({text: `${signature}\nv0=${hmac.digest('hex')}`, channel: req.body.channel_id})
     return signature　=== `v0=${hmac.digest('hex')}`;
 }
