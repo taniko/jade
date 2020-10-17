@@ -14,6 +14,7 @@ exports.jade = async (req: Request, res: Response) => {
         res.status(403).send("error");
         return;
     }
+    res.status(200).send("ok");
     const storage = new Storage();
     const bucket = storage.bucket("jade-slack");
     const [files] = await bucket.getFiles({
@@ -26,13 +27,8 @@ exports.jade = async (req: Request, res: Response) => {
     const file = candidate[random(candidate.length)];
     const name = file.name.split('/').pop()
     await candidate[random(candidate.length)].download({destination: `/tmp/${name}`});
-    if (name != undefined) {
-        res.status(200).send("ok");
-        const slack = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
-        await slack.files.upload({channels: req.body.channel_id, file: createReadStream(`/tmp/${name}`)});
-    } else {
-        res.status(500).send('error');
-    }
+    const slack = new WebClient(await decrypt(process.env.SLACK_TOKEN as string));
+    await slack.files.upload({channels: req.body.channel_id, file: createReadStream(`/tmp/${name}`)});
     return
 }
 
@@ -62,5 +58,5 @@ const validation = async (req: Request): Promise<boolean> => {
     const secret = await decrypt(process.env.SIGNING_SECRET as string);
     const hmac = crypto.createHmac('sha256', secret as string);
     hmac.update(`v0:${timestamp}:${qs.stringify(req.body, {format: 'RFC1738'})}`);
-    return signature　=== `v0=${hmac.digest('hex')}`;
+    return signature === `v0=${hmac.digest('hex')}`;
 }
